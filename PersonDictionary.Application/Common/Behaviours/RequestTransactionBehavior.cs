@@ -1,6 +1,7 @@
 ﻿
 using MediatR;
 using Microsoft.Extensions.Logging;
+using PersonDirectory.Common.Application.Interfaces;
 using PersonDirectory.Domain.Interfaces;
 
 namespace PersonDirectory.Application.Common.Behaviours
@@ -11,24 +12,32 @@ namespace PersonDirectory.Application.Common.Behaviours
     {
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-            try
+            var response = default(TResponse);
+            if (request is ITransactionalRequest)
             {
-                await _uof.BeginTransactionAsync();
+                try
+                {
+                    await _uof.BeginTransactionAsync();
 
-                var result = await next();
+                    var result = await next();
 
-                await _uof.CommitTransactionAsync();
+                    await _uof.CommitTransactionAsync();
 
-                return result;
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogInformation($"Rollback Db Transaction for {typeof(TRequest).Name}!" +
+                        $"{ex.Message}");
+
+                    await _uof.RollbackTransactionAsync();
+                    throw;
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogInformation($"Rollback Db Transaction for {typeof(TRequest).Name}!" +
-                    $"{ex.Message}");
+            else
+                response = await next();
 
-                await _uof.RollbackTransactionAsync();
-                throw;
-            }
+            return response;
         }
     }
 }

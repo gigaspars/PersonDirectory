@@ -1,9 +1,10 @@
 ﻿using MediatR;
+using PersonDirectory.Common.Application.Interfaces;
 using PersonDirectory.Domain.Enum;
 
 namespace PersonDirectory.Application.Person.Commands.Create
 {
-    public class CreatePersonCommand : IRequest<int>
+    public class CreatePersonCommand : IRequest<int>, ITransactionalRequest
     {
         public string Name { get; set; }
         public string LastName { get; set; }

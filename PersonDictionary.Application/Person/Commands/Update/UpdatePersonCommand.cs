@@ -1,9 +1,10 @@
 ﻿using MediatR;
+using PersonDirectory.Common.Application.Interfaces;
 using PersonDirectory.Domain.Enum;
 
 namespace PersonDirectory.Application.Person.Commands.Update
 {
-    public class UpdatePersonCommand : IRequest<Unit>
+    public class UpdatePersonCommand : IRequest<Unit>, ITransactionalRequest
     {
         public int Id { get; set; }
         public string Name { get; set; }
